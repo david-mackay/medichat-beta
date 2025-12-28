@@ -6,6 +6,8 @@ import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 
+export const dynamic = "force-dynamic";
+
 function getSafeReturnTo(value: string | null) {
   if (!value) return null;
   // Only allow internal paths.
