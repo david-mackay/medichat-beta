@@ -1,34 +1,22 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 
 import { useWalletAuth } from "@/hooks/useWalletAuth";
 
-export const dynamic = "force-dynamic";
-
-function getSafeReturnTo(value: string | null) {
-  if (!value) return null;
-  // Only allow internal paths.
-  if (!value.startsWith("/")) return null;
-  if (value.startsWith("//")) return null;
-  return value;
-}
-
-function AuthPageContent() {
+export default function AuthPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const walletAuth = useWalletAuth();
   const { open } = useAppKit();
   const { isConnected } = useAppKitAccount();
 
   useEffect(() => {
     if (walletAuth.status === "authenticated") {
-      const returnTo = getSafeReturnTo(searchParams.get("returnTo"));
-      router.replace(returnTo ?? "/");
+      router.replace("/");
     }
-  }, [walletAuth.status, router, searchParams]);
+  }, [walletAuth.status, router]);
 
   const isLoading =
     walletAuth.status === "checking" || walletAuth.status === "authenticating";
@@ -70,20 +58,6 @@ function AuthPageContent() {
         </p>
       </div>
     </div>
-  );
-}
-
-export default function AuthPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center px-4 bg-zinc-50 dark:bg-black">
-        <div className="w-full max-w-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-8 rounded-lg">
-          <div className="text-sm text-zinc-600 dark:text-zinc-400">Loading...</div>
-        </div>
-      </div>
-    }>
-      <AuthPageContent />
-    </Suspense>
   );
 }
 
