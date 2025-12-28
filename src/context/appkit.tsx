@@ -23,18 +23,20 @@ if (!projectId) {
   );
 }
 
-// Get base URL dynamically for metadata
+// Get base URL for metadata
+// NEXT_PUBLIC_APP_URL should be set in Vercel environment variables
+// Format: https://your-domain.vercel.app (or your custom domain)
 const getBaseUrl = () => {
-  // Client-side: use current origin
+  // Use explicit env var if set (recommended for production)
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  // Client-side fallback: use current origin
   if (typeof window !== "undefined") {
     return window.location.origin;
   }
-  // Server-side: prefer env var, fallback to Vercel URL, then localhost
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-    "http://localhost:3000"
-  );
+  // Build-time fallback (will be replaced at runtime)
+  return "http://localhost:3000";
 };
 
 const baseUrl = getBaseUrl();
