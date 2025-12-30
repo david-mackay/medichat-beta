@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
 type AcceptResult = {
   ok: boolean;
   kind?: "patientInvitesPhysician" | "physicianInvitesPatient";
@@ -66,7 +68,14 @@ export function InviteAcceptClient({
           disabled={disabled || loading}
           className="px-4 py-2 rounded bg-zinc-900 text-white dark:bg-white dark:text-black text-sm font-medium disabled:opacity-50"
         >
-          {loading ? "Accepting…" : "Accept invite"}
+          {loading ? (
+            <span className="inline-flex items-center gap-2">
+              <span>Accepting</span>
+              <LoadingDots />
+            </span>
+          ) : (
+            "Accept invite"
+          )}
         </button>
       </div>
 

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
 type Profile = {
   ageYears: number | null;
   gender: string;
@@ -384,7 +386,14 @@ export function PatientDataForm() {
               disabled={loading}
               className="px-4 py-2 rounded bg-zinc-900 text-white dark:bg-white dark:text-black text-sm font-medium disabled:opacity-50"
             >
-              {loading ? "Saving…" : "Save profile"}
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <span>Saving</span>
+                  <LoadingDots />
+                </span>
+              ) : (
+                "Save profile"
+              )}
             </button>
             <div className="text-xs text-zinc-500 dark:text-zinc-500">
               {profile ? "Loaded from database." : "No profile saved yet."}

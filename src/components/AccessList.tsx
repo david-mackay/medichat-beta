@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
 type PhysicianAccess = {
   physicianUserId: string;
   physicianWalletAddress: string;
@@ -97,7 +99,14 @@ export function AccessList() {
           ))
         ) : (
           <div className="p-4 text-sm text-zinc-600 dark:text-zinc-400">
-            {loading ? "Loading…" : "No physicians have access yet."}
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <span>Loading</span>
+                <LoadingDots sizeClassName="h-1 w-1" />
+              </span>
+            ) : (
+              "No physicians have access yet."
+            )}
           </div>
         )}
       </div>

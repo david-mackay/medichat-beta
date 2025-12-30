@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
 type InsightsResponse = {
   ok: boolean;
   error?: string;
@@ -139,7 +141,11 @@ export function DocumentInsightsDrawer({
               Document insights
             </div>
             <div className="text-sm font-semibold truncate">
-              {doc?.originalFileName ?? "Loading…"}
+              {doc?.originalFileName ? (
+                doc.originalFileName
+              ) : (
+                <span className="block h-4 w-56 max-w-full rounded bg-zinc-100 dark:bg-zinc-900 medichat-skeleton" />
+              )}
             </div>
             {doc ? (
               <div className="text-xs text-zinc-500 dark:text-zinc-500">
@@ -167,7 +173,10 @@ export function DocumentInsightsDrawer({
 
           {loading ? (
             <div className="text-sm text-zinc-600 dark:text-zinc-400">
-              Building your timeline…
+              <span className="inline-flex items-center gap-2">
+                <span>Building your timeline</span>
+                <LoadingDots />
+              </span>
             </div>
           ) : null}
 

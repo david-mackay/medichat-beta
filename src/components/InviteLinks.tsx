@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
 type InviteKind = "patientInvitesPhysician" | "physicianInvitesPatient";
 
 type Invite = {
@@ -123,7 +125,14 @@ export function InviteLinks({
           disabled={loading}
           className="px-4 py-2 rounded bg-zinc-900 text-white dark:bg-white dark:text-black text-sm font-medium disabled:opacity-50"
         >
-          {loading ? "Working…" : "Create invite link"}
+          {loading ? (
+            <span className="inline-flex items-center gap-2">
+              <span>Working</span>
+              <LoadingDots />
+            </span>
+          ) : (
+            "Create invite link"
+          )}
         </button>
         <button
           type="button"

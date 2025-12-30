@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { DocumentInsightsDrawer } from "@/components/DocumentInsightsDrawer";
+import { LoadingDots } from "@/components/LoadingDots";
 
 type DocumentRow = {
   id: string;
@@ -136,7 +137,14 @@ export function DocumentManager({
             disabled={loading || !file}
             className="px-4 py-2 rounded bg-zinc-900 text-white dark:bg-white dark:text-black text-sm font-medium disabled:opacity-50"
           >
-            {loading ? "Working…" : "Upload"}
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <span>Working</span>
+                <LoadingDots />
+              </span>
+            ) : (
+              "Upload"
+            )}
           </button>
           <button
             type="button"
@@ -153,7 +161,14 @@ export function DocumentManager({
         <div className="p-4 flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">Documents</h2>
           <div className="text-xs text-zinc-500 dark:text-zinc-500">
-            {loading ? "Loading…" : `${documents.length} item(s)`}
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <span>Loading</span>
+                <LoadingDots sizeClassName="h-1 w-1" />
+              </span>
+            ) : (
+              `${documents.length} item(s)`
+            )}
           </div>
         </div>
 

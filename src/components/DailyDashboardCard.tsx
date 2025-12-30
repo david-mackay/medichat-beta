@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { LoadingDots } from "@/components/LoadingDots";
+
 type DashboardRow = {
   id: string;
   patientUserId: string;
@@ -19,6 +21,36 @@ type DashboardJson = {
   redFlags?: string[];
   suggestedFollowUps?: string[];
 };
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <div className="h-4 w-full max-w-[520px] rounded bg-zinc-100 dark:bg-zinc-900 medichat-skeleton" />
+        <div className="h-4 w-[92%] max-w-[560px] rounded bg-zinc-100 dark:bg-zinc-900 medichat-skeleton" />
+        <div className="h-4 w-[78%] max-w-[420px] rounded bg-zinc-100 dark:bg-zinc-900 medichat-skeleton" />
+      </div>
+
+      <div className="space-y-2">
+        <div className="h-3 w-24 rounded bg-zinc-100 dark:bg-zinc-900 medichat-skeleton" />
+        <div className="space-y-2">
+          <div className="h-3 w-[86%] rounded bg-zinc-100 dark:bg-zinc-900 medichat-skeleton" />
+          <div className="h-3 w-[72%] rounded bg-zinc-100 dark:bg-zinc-900 medichat-skeleton" />
+          <div className="h-3 w-[64%] rounded bg-zinc-100 dark:bg-zinc-900 medichat-skeleton" />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="h-3 w-36 rounded bg-zinc-100 dark:bg-zinc-900 medichat-skeleton" />
+        <div className="space-y-2">
+          <div className="h-3 w-[90%] rounded bg-zinc-100 dark:bg-zinc-900 medichat-skeleton" />
+          <div className="h-3 w-[76%] rounded bg-zinc-100 dark:bg-zinc-900 medichat-skeleton" />
+          <div className="h-3 w-[68%] rounded bg-zinc-100 dark:bg-zinc-900 medichat-skeleton" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function DailyDashboardCard({
   patientUserId,
@@ -70,7 +102,10 @@ export function DailyDashboardCard({
   }, []);
 
   return (
-    <section className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 space-y-3">
+    <section
+      className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 space-y-3 transition-colors duration-200"
+      aria-busy={loading}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <h2 className="text-sm font-semibold">AI daily overview</h2>
@@ -82,20 +117,41 @@ export function DailyDashboardCard({
           type="button"
           onClick={() => void generate(Boolean(dashboard))}
           disabled={loading}
-          className="px-3 py-2 text-sm rounded bg-zinc-900 text-white dark:bg-white dark:text-black disabled:opacity-50"
+          className="px-3 py-2 text-sm rounded bg-zinc-900 text-white dark:bg-white dark:text-black disabled:opacity-50 transition-opacity"
         >
-          {loading ? "Generating…" : dashboard ? "Regenerate" : "Generate"}
+          {loading ? (
+            <span className="inline-flex items-center gap-2">
+              <span>Generating</span>
+              <LoadingDots />
+            </span>
+          ) : dashboard ? (
+            "Regenerate"
+          ) : (
+            "Generate"
+          )}
         </button>
       </div>
 
+      {loading ? (
+        <div className="h-1 rounded bg-zinc-100 dark:bg-zinc-900 medichat-progress" />
+      ) : null}
+
       {error ? (
-        <div className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-200">
+        <div className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-200 medichat-animate-in">
           {error}
         </div>
       ) : null}
 
       {dashboard ? (
-        <div className="space-y-3">
+        <div
+          key={`${dashboard.id}:${dashboard.createdAt}`}
+          className={[
+            "space-y-3",
+            "transition-opacity duration-200",
+            loading ? "opacity-60" : "opacity-100",
+            "medichat-animate-in",
+          ].join(" ")}
+        >
           {data.overview ? <div className="text-sm whitespace-pre-wrap">{data.overview}</div> : null}
 
           {data.insights?.length ? (
@@ -150,9 +206,11 @@ export function DailyDashboardCard({
             Model: {dashboard.model}
           </div>
         </div>
+      ) : loading ? (
+        <DashboardSkeleton />
       ) : (
         <div className="text-sm text-zinc-600 dark:text-zinc-400">
-          {loading ? "Generating today’s dashboard…" : "No dashboard generated yet for today."}
+          No dashboard generated yet for today.
         </div>
       )}
     </section>
