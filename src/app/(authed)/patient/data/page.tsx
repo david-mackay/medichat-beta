@@ -19,9 +19,9 @@ export default async function PatientDataPage() {
   });
 
   return (
-    <PatientDataPageClient 
-      userId={userId} 
-      initialName={userProfile?.displayName ?? null} 
+    <PatientDataPageClient
+      userId={userId}
+      initialName={userProfile?.displayName ?? null}
     />
   );
 }

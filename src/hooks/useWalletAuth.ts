@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAppKitAccount } from "@reown/appkit/react";
+import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
+
+/** Solana wallet provider with signMessage (from Phantom, Solflare, Reown embedded, etc.) */
+interface SolanaSigner {
+  signMessage(message: Uint8Array): Promise<Uint8Array>;
+}
 
 type AuthStatus =
   | "checking"
@@ -29,6 +34,7 @@ const initialState: AuthState = {
 
 export function useWalletAuth() {
   const { address, isConnected } = useAppKitAccount();
+  const { walletProvider } = useAppKitProvider<SolanaSigner | undefined>("solana");
   const [state, setState] = useState<AuthState>(initialState);
   const clearedServerSessionOnDisconnectRef = useRef(false);
 
@@ -74,14 +80,43 @@ export function useWalletAuth() {
       return;
     }
 
+    if (!walletProvider?.signMessage) {
+      setState({
+        status: "error",
+        user: null,
+        error: "Wallet does not support message signing",
+      });
+      return;
+    }
+
     try {
       setState((prev) => ({ ...prev, status: "authenticating", error: null }));
 
+      // 1. Fetch auth challenge from server
+      const nonceRes = await fetch("/api/auth/nonce", { cache: "no-store" });
+      if (!nonceRes.ok) {
+        throw new Error("Failed to get auth challenge");
+      }
+      const { message } = (await nonceRes.json()) as { message: string };
+
+      // 2. Request user to sign the message (proves wallet ownership)
+      const encodedMessage = new TextEncoder().encode(message);
+      const signature = await walletProvider.signMessage(encodedMessage);
+
+      // 3. Send signed message to create session
+      const sigBytes = new Uint8Array(signature);
+      const signatureBase64 = btoa(
+        String.fromCharCode.apply(null, Array.from(sigBytes))
+      );
       const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ walletAddress: address }),
+        body: JSON.stringify({
+          walletAddress: address,
+          message,
+          signature: signatureBase64,
+        }),
       });
 
       if (!res.ok) {
@@ -107,7 +142,7 @@ export function useWalletAuth() {
         error: error instanceof Error ? error.message : "Authentication failed",
       });
     }
-  }, [address, isConnected]);
+  }, [address, isConnected, walletProvider]);
 
   const logout = useCallback(async () => {
     try {
@@ -151,14 +186,15 @@ export function useWalletAuth() {
       return;
     }
 
-    // If not authenticated but connected, create session
-    if (state.status === "unauthenticated") {
+    // If not authenticated but connected, create session (wait for walletProvider)
+    if (state.status === "unauthenticated" && walletProvider?.signMessage) {
       void authenticate();
     }
   }, [
     isConnected,
     address,
     authenticate,
+    walletProvider,
     state.status,
     state.user?.walletAddress,
   ]);

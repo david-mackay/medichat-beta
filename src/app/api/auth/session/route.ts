@@ -5,6 +5,7 @@ import {
   createSessionToken,
   setSessionCookie,
 } from "@/server/auth/session";
+import { verifySolanaAuthSignature } from "@/server/auth/verify-signature";
 
 export const runtime = "nodejs";
 
@@ -18,9 +19,13 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { walletAddress } = (await req.json()) as {
+    const body = (await req.json()) as {
       walletAddress?: string;
+      message?: string;
+      signature?: string;
     };
+
+    const { walletAddress, message, signature } = body;
 
     if (!walletAddress || typeof walletAddress !== "string") {
       return NextResponse.json(
@@ -29,12 +34,40 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (!message || typeof message !== "string") {
+      return NextResponse.json(
+        { error: "Missing message - wallet signature required to prove ownership" },
+        { status: 400 }
+      );
+    }
+
+    if (!signature || typeof signature !== "string") {
+      return NextResponse.json(
+        { error: "Missing signature - wallet signature required to prove ownership" },
+        { status: 400 }
+      );
+    }
+
+    // Verify the user signed the message with their wallet (proves ownership)
+    const verifiedAddress = verifySolanaAuthSignature(
+      walletAddress,
+      message,
+      signature
+    );
+
+    if (!verifiedAddress) {
+      return NextResponse.json(
+        { error: "Invalid or expired signature - please sign the message with your wallet" },
+        { status: 401 }
+      );
+    }
+
     // Create session token without DB lookup - user will be created lazily when needed
     // This avoids RLS issues and makes auth work even if DB has problems
-    const token = createSessionToken(walletAddress);
+    const token = createSessionToken(verifiedAddress);
     const response = NextResponse.json({
       ok: true,
-      user: { id: walletAddress, walletAddress }, // Temporary ID until DB user is created
+      user: { id: verifiedAddress, walletAddress: verifiedAddress },
     });
     setSessionCookie(response, token);
 
